@@ -199,4 +199,3 @@ def start(my_team):
     print("All team members have been slain. You made it to round {}. Good job!".format(numEnemies))
 start(my_team)
 
-#commentaasdf a'hiufdasuidfsadADS 
