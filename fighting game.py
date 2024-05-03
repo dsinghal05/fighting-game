@@ -1,5 +1,5 @@
 #Combat game where 2 players have their own party of different party members
-#Parent class with generic attributes (health, armor)
+#Parent class with generic attributes (health, armor) 
 #Specialized classes (healer, fighter) that have unique abilities
 from random import randint
 my_team = []
