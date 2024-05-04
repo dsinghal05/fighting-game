@@ -2,6 +2,7 @@
 #Parent class with generic attributes (health, armor) 
 #Specialized classes (healer, fighter) that have unique abilities
 from random import randint
+from time import sleep
 my_team = []
 enemy_team = []
 class Generic:
@@ -19,7 +20,9 @@ class Generic:
         self.health = h
     
     def emote(self):
+        sleep(3)
         print("{} does a little jig".format(self.name))
+        sleep(3)
 
 
 class Fighter(Generic):
@@ -51,43 +54,81 @@ class Healer(Generic):
     def __repr__(self):
         return ("My name is {} and I can healing ability of {}!".format(self.name, self.healing))
     
-def makeMove(char, enemy_team, my_team):
+def getInt(string):
+    while True:
+        try:
+            question = int(input(string))
+            break
+        except:
+            print("That's not a number.")
+    return question
+    
+def getMove(char):
     if isinstance(char, Fighter):
-        move = input("{} has current move set: \n1. Attack \n2. Dance \nChoose your move: ".format(char.getName()))
-        if move == '1':
+        move = getInt("{} has current move set: \n1. Attack \n2. Dance \n3. Show current fight status \nChoose your move: ".format(char.getName()))
+        return move
+    elif isinstance(char, Healer):
+        move = getInt("{} has current move set: \n1. Attack\n2. Heal\n3. Dance \n4. Show current fight status\nChoose your move: ".format(char.getName()))
+        return move
+    
+def showStats(my_team, enemy_team, char):
+    print("{} takes a moment to survey the battlefield.".format(char.getName()))
+    sleep(0.5)
+    print("You have {} team members left alive.".format(len(my_team)))
+    for i in range(len(my_team)):
+        print(my_team[i])
+        print("{} has {} health.".format(my_team[i].getName(), my_team[i].getHealth()))
+        sleep(2)
+    print("\n There are {} enemies left alive".format(len(enemy_team)))
+    for i in range(len(enemy_team)):
+        print(enemy_team[i])
+        print("{} would never tell, but it looks like they have {} health left.".format(enemy_team[i].getName(), enemy_team[i].getHealth()))
+        sleep(2)
+    
+def makeMove(char, enemy_team, my_team):
+    move = getMove(char)
+    if isinstance(char, Fighter):
+        if move == 1:
             for i in range(len(enemy_team)):
                 print("Enter {} to attack {}".format(i+1, enemy_team[i].getName()))
-            target = int(input("Choose target to attack: ")) -1
-            enemy = enemy_team[target]
-            num = enemy.getHealth() - char.getPower()
-            enemy.setHealth(num)
-            print("{} does {} damage to {}".format(char.getName(), char.getPower(), enemy.getName()))
-            crit_chance = randint(1, 10)
-            if crit_chance <= char.getCrit():
+            target = getInt("Choose target to attack: ") -1
+            if target < len(enemy_team):
+                enemy = enemy_team[target]
                 num = enemy.getHealth() - char.getPower()
                 enemy.setHealth(num)
-                print("{} does a critical hit doing double damage!".format(char.getName()))
-            if enemy.getHealth() <= 0:
-                del enemy_team[target]
-                print("{} has been slain!".format(enemy.getName()))
+                print("{} does {} damage to {}".format(char.getName(), char.getPower(), enemy.getName()))
+                crit_chance = randint(1, 10)
+                if crit_chance <= char.getCrit():
+                    num = enemy.getHealth() - char.getPower()
+                    enemy.setHealth(num)
+                    print("{} does a critical hit doing double damage!".format(char.getName()))
+                if enemy.getHealth() <= 0:
+                    del enemy_team[target]
+                    print("{} has been slain!".format(enemy.getName()))
+                else:
+                    print("{} has {} health remaining".format(enemy.getName(), enemy.getHealth()))
             else:
-                print("{} has {} health remaining".format(enemy.getName(), enemy.getHealth()))
-        elif move == '2':
+                print("{} swung into thin air and did 0 damage!".format(char.getName()))
+        elif move == 2:
             char.emote()
+        elif move == 3:
+            showStats(my_team, enemy_team, char)
         else:
-            makeMove(char, enemy, my_team)
+            makeMove(char, enemy_team, my_team)
     if isinstance(char, Healer):
-        move = input("{} has current move set: \n1. Attack\n2. Heal\n3. Dance \nChoose your move: ".format(char.getName()))
-        if move == '1':
+        if move == 1:
             for i in range(len(enemy_team)):
                 print("enter {} to attack {}".format(i+1, enemy_team[i].getName()))
-            target = int(input("Choose target to attack: ")) -1
-            enemy = enemy_team[target]
-            num = enemy.getHealth() - char.getPower()
-            enemy.setHealth(num)
-            print("{} does {} damage to {}".format(char.getName(), char.getPower(), enemy.getName()))
-            print("{} has {} health remaining".format(enemy.getName(), enemy.getHealth()))
-        elif move == '2':
+            target = getInt("Choose target to attack: ") -1
+            if target < len(enemy_team):
+                enemy = enemy_team[target]
+                num = enemy.getHealth() - char.getPower()
+                enemy.setHealth(num)
+                print("{} does {} damage to {}".format(char.getName(), char.getPower(), enemy.getName()))
+                print("{} has {} health remaining".format(enemy.getName(), enemy.getHealth()))
+            else:
+                print("{} swung into thin air and did 0 damage!".format(char.getName()))
+        elif move == 2:
             print("You can heal 1 of {} characters".format(len(my_team)))
             for i in range(len(my_team)):
                 print("enter {} to heal {}".format(i+1, my_team[i].getName()))
@@ -95,10 +136,12 @@ def makeMove(char, enemy_team, my_team):
             num = my_team[target].getHealth() + char.getHealing()
             my_team[target].setHealth(num)
             print("{} now has {} health".format(my_team[target].getName(), my_team[target].getHealth()))
-        elif move == '3':
+        elif move == 3:
             char.emote()
+        elif move == 4:
+            showStats(my_team, enemy_team, char)
         else:
-            makeMove(char, enemy, my_team)
+            makeMove(char, enemy_team, my_team)
                 
 def genEnemyTeam(numEnemies):
     for i in range(numEnemies):
@@ -117,13 +160,17 @@ def enemyMoves(my_team, enemy_team):
         print("{} did {} damage to {} leaving them at {} health".format(enemy.getName(), enemy.getPower(), my_team[target].getName(), my_team[target].getHealth()))
         if my_team[target].getHealth() <= 0:
             del my_team[target]
-            print("{} has been slain!".format(my_team[target]))
+            print("{} has been slain!".format(my_team[target].getName()))
 
 def Fight(my_team, enemy_team, numEnemies):
     genEnemyTeam(numEnemies)
+    sleep(3)
+    print("-------------------------------")
     print("You have {} enemies this round. Good luck!".format(numEnemies))
+    sleep(2)
     for i in range(len(enemy_team)):
         print(enemy_team[i])
+        sleep(1)
     while len(enemy_team) > 0 and len(my_team) > 0:
         if len(my_team) > 0:
             print("\nYour turn!")
@@ -134,8 +181,9 @@ def Fight(my_team, enemy_team, numEnemies):
                     makeMove(c_p, enemy_team, my_team)
         #Then enemies turn
         if len(enemy_team) > 0:
-            print("\nEnemy team's turn to attack!")
+            print("\n------------------------\nEnemy team's turn to attack!")
             enemyMoves(my_team, enemy_team)
+            print("-----------------------------")
         else:
             break
     if len(enemy_team) == 0:
@@ -146,9 +194,9 @@ def Fight(my_team, enemy_team, numEnemies):
 def buildFighter(i):
     print("\nBuilding fighter {}:".format(i+1))
     print("A fighter starts with 20 health and 3 power. You have 10 points that you can attribute to his power, health, or crit ability.")
-    power = int(input("How much more power should he have? "))
-    health = int(input("How much more health should he have? "))
-    crit = int(input("How much crit should he have? "))
+    power = getInt("How much more power should he have? ")
+    health = getInt("How much more health should he have? ")
+    crit = getInt("How much crit should he have? ")
     if power + health + crit <= 10:
         name = input("What should his name be? ")
         my_team.append(Fighter(name, power + 3, health + 20, crit))
@@ -160,9 +208,9 @@ def buildFighter(i):
 def buildHealer(i):
     print("\nBuilding healer {}:".format(i+1))
     print("A healer starts with 30 health and 6 healing power. You have 10 points that you can attribute to his power, health, or healing ability.")
-    power = int(input("How much power should he have? "))
-    health = int(input("How much more health should he have? "))
-    healing = int(input("How much more healing should he have? "))
+    power = getInt("How much power should he have? ")
+    health = getInt("How much more health should he have? ")
+    healing = getInt("How much more healing should he have? ")
     if power + health + healing <= 10:
         name = input("What should his name be? ")
         my_team.append(Healer(name, healing+6, health+30, power))
@@ -172,15 +220,16 @@ def buildHealer(i):
         buildFighter(i)
 
 def buildTeam():
-    numFighters = int(input("How many fighters would you like? You can have 0, 1, 2, or 3: "))
-    numHealers = 3-numFighters
+    numFighters = getInt("How many fighters would you like? You can have 0, 1, 2, or 3: ")
     if numFighters == 0 or numFighters == 1 or numFighters == 2 or numFighters == 3:
-        print("you will have {} fighters and {} healers.".format(numFighters, numHealers))
+        numHealers = 3-numFighters
+        print("You will have {} fighters and {} healers.".format(numFighters, numHealers))
         for i in range(numFighters):
             buildFighter(i)
         for i in range(numHealers):
             buildHealer(i)
     else:
+        print("I said you can have 1, 2, or 3.")
         buildTeam()
 
     
@@ -191,6 +240,7 @@ def start(my_team):
     print("\nYour team is built:")
     for i in range(len(my_team)):
         print(my_team[i])
+        sleep(1)
     print('\n')
     numEnemies = 1
     while len(my_team) > 0:
